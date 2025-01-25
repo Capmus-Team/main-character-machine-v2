@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Main Character Machine</title>
+  <style>
+    body {
+      font-family: 'Burbank Big Condensed', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #2a2a72;
+      color: #fff;
+    }
+    .container {
+      background: #181842;
+      padding: 20px;
+      border: 3px solid #4fc3f7;
+      width: 400px;
+      text-align: center;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .header {
+      font-size: 1.5em;
+      color: #ffce00;
+      margin-bottom: 10px;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2em;
+      color: #ff9000;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="file"] {
+      width: calc(100% - 20px);
+      padding: 10px;
+      margin: 10px 0;
+      border: 3px solid #ff3e3e;
+      background: #27275a;
+      color: #fff;
+      font-size: 1em;
+      text-align: center;
+    }
+    button {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(90deg, #ff3e3e, #ff9000);
+      border: none;
+      cursor: pointer;
+      font-size: 1.2em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    button:hover {
+      background: linear-gradient(90deg, #ff9000, #ff3e3e);
+    }
+    p {
+      font-size: 1.2em;
+      margin: 15px 0;
+    }
+    .quest-container, .result-container, .leaderboard-container, .ranked-leaderboard-container {
+      display: none;
+    }
+    .npc-meter {
+      margin: 20px 0;
+      background: #4c4c72;
+      height: 20px;
+      border: 2px solid #ff3e3e;
+      position: relative;
+    }
+    .npc-meter-fill {
+      background: #ff9000;
+      height: 100%;
+      width: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container form-container" id="formContainer">
+    <div class="header">Main Character Machine</div>
+    <h1>Welcome to MCM!</h1>
+    <p>Upload a photo of your surroundings and I'll give you a quest.</p>
+    <form id="userForm">
+      <input type="text" id="name" name="name" placeholder="Enter your name" required>
+      <input type="number" id="age" name="age" placeholder="Enter your age" required>
+      <input type="file" id="picture" name="picture" accept="image/*" required>
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+  <div class="container quest-container" id="questContainer">
+    <div class="header">Main Character Machine</div>
+    <h1>Your Quest</h1>
+    <p id="questText"></p>
+    <p id="questPoints"></p>
+    <p id="questInstructions"></p>
+    <button id="successButton">Success</button>
+    <button id="failureButton">Failure</button>
+  </div>
+  <div class="container leaderboard-container" id="leaderboardContainer">
+    <div class="header">Main Character Machine</div>
+    <h1>Aura</h1>
+    <div class="npc-meter">
+      <div class="npc-meter-fill" id="npcMeterFill"></div>
+    </div>
+    <p id="npcStatus">Status: Main Character</p>
+    <button id="toRankedLeaderboard">View Ranked Leaderboard</button>
+  </div>
+  <div class="container ranked-leaderboard-container" id="rankedLeaderboardContainer">
+    <div class="header">Main Character Machine</div>
+    <h1>Leaderboard</h1>
+    <p>Total Players: <span id="totalPlayers"></span></p>
+    <ol id="rankedLeaderboard"></ol>
+  </div>
+  <script>
+    const quests = [
+      { text: "Collect all the pillows in your house!", points: 50, instructions: "Stack them up and take a picture." },
+      { text: "Find a hidden treasure in your neighborhood!", points: 100, instructions: "Draw a map to guide others." },
+      { text: "Help a stranger by performing a random act of kindness.", points: 75, instructions: "Share what you did on social media." },
+      { text: "Take a 10-minute walk and find three interesting objects.", points: 30, instructions: "Document them with short descriptions." },
+      { text: "Create a piece of art using only items you find outdoors.", points: 120, instructions: "Show your art to friends and get their feedback." },
+      { text: "Cook a meal you've never tried before!", points: 90, instructions: "Write down the recipe and rate it." },
+      { text: "Challenge a friend to a quick trivia game.", points: 60, instructions: "Share the final score." },
+      { text: "Learn a new fact and share it with someone.", points: 25, instructions: "Write it down and add a fun drawing." }
+    ];
+
+    const leaderboard = [
+      { name: "Alex", aura: 120 },
+      { name: "Jordan", aura: 90 },
+      { name: "Casey", aura: 75 },
+      { name: "Riley", aura: 60 },
+      { name: "Taylor", aura: 50 }
+    ];
+
+    let currentPoints = 0;
+
+    document.getElementById('userForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const age = document.getElementById('age').value;
+      const picture = document.getElementById('picture').files[0];
+
+      if (!name || !age || !picture) {
+        alert('Please fill in all fields and upload a picture.');
+        return;
+      }
+
+      document.getElementById('formContainer').style.display = 'none';
+      document.getElementById('questContainer').style.display = 'block';
+
+      const randomQuest = quests[Math.floor(Math.random() * quests.length)];
+      document.getElementById('questText').innerText = randomQuest.text;
+      document.getElementById('questPoints').innerText = `Points: ${randomQuest.points}`;
+      document.getElementById('questInstructions').innerText = `Instructions: ${randomQuest.instructions}`;
+
+      currentPoints = randomQuest.points;
+
+      document.getElementById('successButton').onclick = () => {
+        leaderboard.push({ name, aura: currentPoints });
+        showAuraPage();
+      };
+
+      document.getElementById('failureButton').onclick = () => {
+        currentPoints = 0; // Reset to NPC level on failure
+        showAuraPage();
+      };
+    });
+
+    function showAuraPage() {
+      document.getElementById('questContainer').style.display = 'none';
+      document.getElementById('leaderboardContainer').style.display = 'block';
+
+      const meterFill = document.getElementById('npcMeterFill');
+      const npcStatus = document.getElementById('npcStatus');
+
+      const percentage = Math.min((currentPoints / 100) * 100, 100);
+      meterFill.style.width = `${percentage}%`;
+
+      if (percentage === 0) {
+        npcStatus.textContent = "Status: NPC";
+      } else if (percentage < 50) {
+        npcStatus.textContent = "Status: Supporting Character";
+      } else {
+        npcStatus.textContent = "Status: Main Character";
+      }
+    }
+
+    document.getElementById('toRankedLeaderboard').onclick = () => {
+      document.getElementById('leaderboardContainer').style.display = 'none';
+      document.getElementById('rankedLeaderboardContainer').style.display = 'block';
+      showRankedLeaderboard();
+    };
+
+    function showRankedLeaderboard() {
+      const sortedLeaderboard = leaderboard.sort((a, b) => b.aura - a.aura);
+      const leaderboardElement = document.getElementById('rankedLeaderboard');
+      leaderboardElement.innerHTML = '';
+      document.getElementById('totalPlayers').textContent = leaderboard.length;
+
+      sortedLeaderboard.forEach((player, index) => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${index + 1}. ${player.name} - Aura: ${player.aura}`;
+        leaderboardElement.appendChild(listItem);
+      });
+    }
+  </script>
+</body>
+</html>
